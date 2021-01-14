@@ -127,3 +127,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+fypenv/
+.idea/
+.DS_Store
