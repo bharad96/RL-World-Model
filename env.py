@@ -271,7 +271,8 @@ def make_env(args, dream_env=False, seed=-1, render_mode=False, full_episode=Fal
       raise ValueError('training in dreams for space invaders is not yet supported')
     else:
       print('makeing real Space Invaders environment')
-      env = SpaceInvaderMDNRNN(args=args, full_episode=full_episode, with_obs=with_obs, load_model=load_model)
+      # env = SpaceInvaderMDNRNN(args=args, full_episode=full_episode, with_obs=with_obs, load_model=load_model)
+      env = SpaceInvaderWrapper(args=args, full_episode=full_episode)
   else:
     if dream_env:
       raise ValueError('training in dreams for carracing is not yet supported')
@@ -282,9 +283,9 @@ def make_env(args, dream_env=False, seed=-1, render_mode=False, full_episode=Fal
     env.seed(seed)
   return env
 
-class SpaceInvaderWrapper(CarRacing):
+class SpaceInvaderWrapper(gym.make('SpaceInvaders-v0')):
   def __init__(self, full_episode=False):
-    super(CarRacingWrapper, self).__init__()
+    super(SpaceInvaderWrapper, self).__init__()
     self.full_episode = full_episode
     self.observation_space = Box(low=0, high=255, shape=(64, 64, 3)) # , dtype=np.uint8
 
@@ -295,7 +296,7 @@ class SpaceInvaderWrapper(CarRacing):
     return obs
 
   def _step(self, action):
-    obs, reward, done, _ = super(CarRacingWrapper, self)._step(action)
+    obs, reward, done, _ = super(SpaceInvaderWrapper, self)._step(action)
     if self.full_episode:
       return self._process_frame(obs), reward, False, {}
     return self._process_frame(obs), reward, done, {}
