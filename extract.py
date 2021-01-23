@@ -6,9 +6,10 @@ import numpy as np
 import random
 import os
 import gym
+import time
 
-from env import make_env
-from controller import make_controller
+from env import EnduroWrapper, EnduroMDNRNN
+# from controller import make_controller
 
 from utils import PARSER
 
@@ -17,79 +18,67 @@ dir_name = 'results/{}/{}/record'.format(args.exp_name, args.env_name)
 if not os.path.exists(dir_name):
     os.makedirs(dir_name)
 
-controller = make_controller(args=args)
+# controls whether we concatenate (z, c, h), etc for features used for car.
+# controller = make_controller(args=args)
 
 total_frames = 0
-env = make_env(args=args, render_mode=args.render_mode, full_episode=args.full_episode, with_obs=True, load_model=False)
+
+# env = make_env(args=args, render_mode=args.render_mode, full_episode=args.full_episode, with_obs=True, load_model=False)
+env = EnduroWrapper(gym.make('Enduro-v0').env)  # Used to extract obs and action for training vae and mdnrnn
 
 for trial in range(args.max_trials):
-  try:
-    random_generated_int = random.randint(0, 2**31-1)
-    filename = dir_name+"/"+str(random_generated_int)+".npz"
-    recording_N = []
-    recording_frame = []
-    recording_action = []
-    recording_reward = []
-    recording_done = []
+    try:
+        random_generated_int = random.randint(0, 2 ** 31 - 1)
+        filename = dir_name + "/" + str(random_generated_int) + ".npz"
 
-    np.random.seed(random_generated_int)
-    env.seed(random_generated_int)
+        recording_frame = []
+        recording_action = []
+        recording_reward = []
 
-    # random policy
-    if args.env_name == 'CarRacing-v0':
-      controller.init_random_model_params(stdev=np.random.rand()*0.01)
-    else:
-      repeat = np.random.randint(1, 11)
+        np.random.seed(random_generated_int)
+        env.seed(random_generated_int)
 
-    tot_r = 0
-    [obs, frame] = env.reset() # pixels
+        repeat = np.random.randint(1, 11)
 
-    for i in range(args.max_frames):
-      if args.render_mode:
-        env.render("human")
-      else:
-        env.render("rgb_array")
+        tot_r = 0
+        # [obs, frame] = env.reset() # pixels
+        frame = env.reset()  # pixels
 
-      if 'CarRacing' in args.env_name:
-        recording_N.append(env.N_tiles)
-      else:
-        recording_N.append(0)
+        done = False
+        i=0
+        while not done:
+            if args.render_mode:
+                # human
+                env.render_processed_frame(frame)
+                time.sleep(0.02)
 
-      recording_frame.append(frame)
-      
-      if args.env_name == 'CarRacing-v0':
-        action = controller.get_action(obs)
-      else:
-        if i % repeat == 0:
-          action = np.random.rand(1,1) * 2.0 - 1.0
-          repeat = np.random.randint(1, 11)
+            recording_frame.append(frame)
 
-      recording_action.append(action)
+            if i % repeat == 0:
+                # up, right, left and down only
+                action = np.random.randint(1, 4)
+                repeat = np.random.randint(1, 11)
 
-      [obs, frame], reward, done, info = env.step(action)
-      tot_r += reward
+            recording_action.append(action)
 
-      recording_reward.append(reward)
-      recording_done.append(done)
+            # [obs, frame], reward, done, info = env.step(action)
+            frame, reward, done, info = env.step(action)
+            tot_r += reward
+            recording_reward.append(reward)
+            i += 1
 
-      if done:
+        total_frames += (i + 1)
         print('total reward {}'.format(tot_r))
-        break
+        print("dead at", i + 1, "total recorded frames for this worker", total_frames)
+        recording_frame = np.array(recording_frame, dtype=np.uint8)
+        recording_action = np.array(recording_action, dtype=np.float16)
+        recording_reward = np.array(recording_reward, dtype=np.float16)
 
-    total_frames += (i+1)
-    print('total reward {}'.format(tot_r))
-    print("dead at", i+1, "total recorded frames for this worker", total_frames)
-    recording_frame = np.array(recording_frame, dtype=np.uint8)
-    recording_action = np.array(recording_action, dtype=np.float16)
-    recording_reward = np.array(recording_reward, dtype=np.float16)
-    recording_done = np.array(recording_done, dtype=np.bool)
-    recording_N = np.array(recording_N, dtype=np.uint16)
-    
-    if (len(recording_frame) > args.min_frames):
-      np.savez_compressed(filename, obs=recording_frame, action=recording_action, reward=recording_reward, done=recording_done, N=recording_N)
-  except gym.error.Error:
-    print("stupid gym error, life goes on")
-    env.close()
-    env = make_env(args=args, render_mode=args.render_mode, full_episode=False, with_obs=True)
-    continue
+        if (len(recording_frame) > args.min_frames):
+            np.savez_compressed(filename, obs=recording_frame, action=recording_action, reward=recording_reward)
+    except gym.error.Error:
+        print("stupid gym error, life goes on")
+        env.close()
+        env = EnduroWrapper(gym.make('Enduro-v0').env)  # Used to extract obs and action for training vae and mdnrnn
+        continue
 env.close()

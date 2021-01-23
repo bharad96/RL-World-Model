@@ -131,3 +131,5 @@ dmypy.json
 fypenv/
 .idea/
 .DS_Store
+record/
+/ref/vizdoom.ini
