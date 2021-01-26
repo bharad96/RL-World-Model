@@ -55,7 +55,7 @@ for trial in range(args.max_trials):
             recording_frame.append(frame)
 
             if i % repeat == 0:
-                # up, right, left and down only
+                # up, right, left only
                 action = np.random.randint(1, 4)
                 repeat = np.random.randint(1, 11)
 
