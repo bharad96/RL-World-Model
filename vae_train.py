@@ -16,17 +16,14 @@ for gpu in gpu_devices:
 
 def ds_gen():
     dirname = 'results/{}/{}/record'.format(args.exp_name, args.env_name)
-    filenames = os.listdir(dirname)[:100]  # only use first 10k episodes
+    filenames = os.listdir(dirname)[:]  # only use first 10k episodes
     n = len(filenames)
     for j, fname in enumerate(filenames):
         if not fname.endswith('npz'):
             continue
         file_path = os.path.join(dirname, fname)
-        # data is a dic with keys obs, action, reward
         with np.load(file_path) as data:
-            # data['obs'] returns a ndarray: (len, 64, 64, 3), shape[0] returns the num of frames, each frame is 64 * 64 * 3
             N = data['obs'].shape[0]
-            # for every frame
             for i, img in enumerate(data['obs']):
                 img_i = img / 255.0
                 yield img_i
@@ -40,10 +37,10 @@ if __name__ == "__main__":
     summary_writer = tf.summary.create_file_writer(tensorboard_dir)
     summary_writer.set_as_default()
     tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=tensorboard_dir, write_graph=False)
-    shuffle_size = 20000
+    shuffle_size = 5 * 2000  # only loads ~5 episodes for shuffle windows b/c im poor and don't have much RAM
     ds = tf.data.Dataset.from_generator(ds_gen, output_types=tf.float32, output_shapes=(64, 64, 3))
-    ds = ds.shuffle(shuffle_size, reshuffle_each_iteration=True).batch(args.vae_batch_size) # batch size is 100
-    ds = ds.prefetch(10)  # prefetch 100 batches in the buffer #tf.data.experimental.AUTOTUNE)
+    ds = ds.shuffle(shuffle_size, reshuffle_each_iteration=True).batch(args.vae_batch_size)
+    ds = ds.prefetch(100)  # prefetch 100 batches in the buffer #tf.data.experimental.AUTOTUNE)
     vae = CVAE(args=args)
     tensorboard_callback.set_model(vae)
     loss_weights = [1.0, 1.0]  # weight both the reconstruction and KL loss the same
@@ -53,9 +50,6 @@ if __name__ == "__main__":
     for i in range(args.vae_num_epoch):
         j = 0
         for x_batch in ds:
-            # print("x_batch size", len(x_batch))
-            # for x_index in range(len(x_batch)):
-            #     x_batch[x_index] = np.asarray(x_batch[x_index])
             if i == 0 and j == 0:
                 vae._set_inputs(x_batch)
             j += 1

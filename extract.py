@@ -8,7 +8,7 @@ import os
 import gym
 import time
 
-from env import EnduroWrapper, EnduroMDNRNN
+from env import BoxingWrapper
 # from controller import make_controller
 
 from utils import PARSER
@@ -24,24 +24,24 @@ if not os.path.exists(dir_name):
 total_frames = 0
 
 # env = make_env(args=args, render_mode=args.render_mode, full_episode=args.full_episode, with_obs=True, load_model=False)
-env = EnduroWrapper(gym.make('Enduro-v0').env)  # Used to extract obs and action for training vae and mdnrnn
+# env = EnduroWrapper(gym.make('Enduro-v0').env)  # Used to extract obs and action for training vae and mdnrnn
+env = BoxingWrapper(gym.make('Boxing-v0').env)  # Used to extract obs and action for training vae and mdnrnn
 
 for trial in range(args.max_trials):
     try:
         random_generated_int = random.randint(0, 2 ** 31 - 1)
         filename = dir_name + "/" + str(random_generated_int) + ".npz"
 
+        recording_N = []
         recording_frame = []
         recording_action = []
         recording_reward = []
+        recording_done = []
 
         np.random.seed(random_generated_int)
         env.seed(random_generated_int)
 
-        repeat = np.random.randint(1, 11)
-
         tot_r = 0
-        # [obs, frame] = env.reset() # pixels
         frame = env.reset()  # pixels
 
         done = False
@@ -53,18 +53,13 @@ for trial in range(args.max_trials):
                 time.sleep(0.02)
 
             recording_frame.append(frame)
-
-            if i % repeat == 0:
-                # up, right, left only
-                action = np.random.randint(1, 4)
-                repeat = np.random.randint(1, 11)
-
+            action = env.action_space.sample()
             recording_action.append(action)
 
-            # [obs, frame], reward, done, info = env.step(action)
             frame, reward, done, info = env.step(action)
             tot_r += reward
             recording_reward.append(reward)
+            recording_done.append(done)
             i += 1
 
         total_frames += (i + 1)
@@ -73,12 +68,15 @@ for trial in range(args.max_trials):
         recording_frame = np.array(recording_frame, dtype=np.uint8)
         recording_action = np.array(recording_action, dtype=np.float16)
         recording_reward = np.array(recording_reward, dtype=np.float16)
+        recording_done = np.array(recording_done, dtype=np.bool)
+        recording_N = np.array(recording_N, dtype=np.uint16)
 
         if (len(recording_frame) > args.min_frames):
-            np.savez_compressed(filename, obs=recording_frame, action=recording_action, reward=recording_reward)
+            np.savez_compressed(filename, obs=recording_frame, action=recording_action, reward=recording_reward,
+                                done=recording_done, N=recording_N)
     except gym.error.Error:
         print("stupid gym error, life goes on")
         env.close()
-        env = EnduroWrapper(gym.make('Enduro-v0').env)  # Used to extract obs and action for training vae and mdnrnn
+        env = BoxingWrapper(gym.make('Boxing-v0').env)  # Used to extract obs and action for training vae and mdnrnn
         continue
 env.close()

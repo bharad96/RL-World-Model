@@ -296,6 +296,30 @@ class EnduroWrapper(gym.ObservationWrapper):
         self.viewer.imshow(img)
         return self.viewer.isopen
 
+class BoxingWrapper(gym.ObservationWrapper):
+    def observation(self, observation):
+        obs = observation[36:177, 32:128, :] # this corresponds to the car racing area
+        obs = Image.fromarray(obs, mode='RGB').resize((64, 64))
+        obs = np.array(obs)
+        return obs
+
+    def __init__(self, env, full_episode=False):
+        super(BoxingWrapper, self).__init__(env)
+        self.full_episode = full_episode
+        self.observation_space = Box(low=0, high=255, shape=(64, 64, 3))  # , dtype=np.uint8
+
+    def step(self, action):
+        obs, reward, done, _ = super(BoxingWrapper, self).step(action)
+        if self.full_episode:
+            return obs, reward, False, {}
+        return obs, reward, done, {}
+
+    def render_processed_frame(self, img):
+        from gym.envs.classic_control import rendering
+        if self.viewer is None:
+            self.viewer = rendering.SimpleImageViewer()
+        self.viewer.imshow(img)
+        return self.viewer.isopen
 
 class EnduroMDNRNN(EnduroWrapper):
     def __init__(self, args, env, load_model=True, full_episode=False, with_obs=False):
