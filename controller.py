@@ -55,16 +55,10 @@ class Controller:
     action[1] = sigmoid(action[1])
     action[2] = clip(np.tanh(action[2]))
     '''
-    if self.exp_mode == MODE_Z_HIDDEN: # one hidden layer
-      h = np.tanh(np.dot(h, self.weight_hidden) + self.bias_hidden)
-      action = np.tanh(np.dot(h, self.weight_output) + self.bias_output)
-    else:
-      action = np.tanh(np.dot(h, self.weight) + self.bias)
-    
-    if 'CarRacing' in self.env_name:
-      action[1] = (action[1]+1.0) / 2.0
-      action[2] = clip(action[2])
-
+    # print("h: ", np.shape(h))
+    # print("weight: ", np.shape(self.weight))
+    action = np.tanh(np.dot(h, self.weight) + self.bias)
+    # print("Controller action: ", action)
     return action
 
   def set_model_params(self, model_params):

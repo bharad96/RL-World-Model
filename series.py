@@ -32,7 +32,7 @@ def ds_gen():
         action = np.reshape(data['action'], newshape=[-1, args.a_width])
         reward = data['reward']
         done = data['done']
-        N = data['N']
+        N = np.zeros(img.shape[0], np.uint16)
 
         n_pad = args.max_frames - img.shape[0]  # pad so they are all a thousand step long episodes
         img = tf.pad(img, [[0, n_pad], [0, 0], [0, 0], [0, 0]])
@@ -66,10 +66,6 @@ def encode_batch(batch_img):
 #     batch_img = batch_img.reshape(batch_size, 64, 64, 3)
 #     return batch_img
 
-
-filelist = os.listdir(DATA_DIR)
-filelist.sort()
-filelist = filelist[0:10000]
 dataset = create_tf_dataset()
 dataset = dataset.batch(1, drop_remainder=True)
 

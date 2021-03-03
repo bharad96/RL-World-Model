@@ -33,6 +33,8 @@ data_mu = raw_data["mu"]
 data_logvar = raw_data["logvar"]
 data_action =  raw_data["action"]
 data_r = raw_data["reward"]
+data_d = raw_data["done"]
+data_N = raw_data["N"]
 N_data = len(data_mu) # should be 10k
 
 # save 1000 initial mu and logvars. Used for sampling when training in dreams
@@ -53,16 +55,20 @@ def ds_gen():
   for _ in range(args.rnn_num_steps):
     indices = np.random.permutation(N_data)[0:args.rnn_batch_size]
     # suboptimal b/c we are always only taking first set of steps
-    mu = data_mu[indices][:, :args.rnn_max_seq_len] 
+    mu = data_mu[indices][:, :args.rnn_max_seq_len]
     logvar = data_logvar[indices][:, :args.rnn_max_seq_len]
     action = data_action[indices][:, :args.rnn_max_seq_len]
     z = sample_vae(mu, logvar)
     r = tf.cast(data_r[indices], tf.float16)[:, :args.rnn_max_seq_len]
-    yield z, action, r
-    
-dataset = tf.data.Dataset.from_generator(ds_gen, output_types=(tf.float16, tf.float16, tf.float16), \
+    d = tf.cast(data_d[indices], tf.float16)[:, :args.rnn_max_seq_len]
+    N = tf.cast(data_N[indices], tf.float16)[:, :args.rnn_max_seq_len]
+    yield z, action, r, d, N
+
+dataset = tf.data.Dataset.from_generator(ds_gen, output_types=(tf.float16, tf.float16, tf.float16, tf.float16, tf.float16), \
     output_shapes=((args.rnn_batch_size, args.rnn_max_seq_len, args.z_size), \
     (args.rnn_batch_size, args.rnn_max_seq_len, args.a_width), \
+    (args.rnn_batch_size, args.rnn_max_seq_len, 1), \
+    (args.rnn_batch_size, args.rnn_max_seq_len, 1), \
     (args.rnn_batch_size, args.rnn_max_seq_len, 1)))
 dataset = dataset.prefetch(10)
 tensorboard_dir = os.path.join(model_save_path, 'tensorboard')
@@ -77,12 +83,10 @@ tensorboard_callback.set_model(rnn)
 # train loop:
 start = time.time()
 step = 0
-for raw_z, raw_a, raw_r in dataset:
-    raw_d = 0
-    # raw_N
+for raw_z, raw_a, raw_r, raw_d, raw_N in dataset:
     curr_learning_rate = (args.rnn_learning_rate-args.rnn_min_learning_rate) * (args.rnn_decay_rate) ** step + args.rnn_min_learning_rate
     rnn.optimizer.learning_rate = curr_learning_rate
-    
+
     inputs = tf.concat([raw_z, raw_a], axis=2)
 
     if step == 0:
@@ -90,18 +94,18 @@ for raw_z, raw_a, raw_r in dataset:
 
     dummy_zero = tf.zeros([raw_z.shape[0], 1, raw_z.shape[2]], dtype=tf.float16)
     z_targ = tf.concat([raw_z[:, 1:, :], dummy_zero], axis=1) # zero pad the end but we don't actually use it
-    # z_mask = 1.0 - raw_d
-    # z_targ = tf.concat([z_targ, z_mask], axis=2) # use a signal to not pass grad
+    z_mask = 1.0 - raw_d
+    z_targ = tf.concat([z_targ, z_mask], axis=2) # use a signal to not pass grad
 
     outputs = {'MDN': z_targ}
-    # if args.rnn_r_pred == 1:
-    #     r_mask = tf.concat([tf.ones([args.rnn_batch_size, 1, 1], dtype=tf.float16), 1.0 - raw_d[:, :-1, :]], axis=1)
-    #     r_targ = tf.concat([raw_r, r_mask], axis=2)
-    #     outputs['r'] = r_targ
-    # if args.rnn_d_pred == 1:
-    #     d_mask = tf.concat([tf.ones([args.rnn_batch_size, 1, 1], dtype=tf.float16), 1.0 - raw_d[:, :-1, :]], axis=1)
-    #     d_targ = tf.concat([raw_d, d_mask], axis=2)
-    #     outputs['d'] = d_targ
+    if args.rnn_r_pred == 1:
+        r_mask = tf.concat([tf.ones([args.rnn_batch_size, 1, 1], dtype=tf.float16), 1.0 - raw_d[:, :-1, :]], axis=1)
+        r_targ = tf.concat([raw_r, r_mask], axis=2)
+        outputs['r'] = r_targ
+    if args.rnn_d_pred == 1:
+        d_mask = tf.concat([tf.ones([args.rnn_batch_size, 1, 1], dtype=tf.float16), 1.0 - raw_d[:, :-1, :]], axis=1)
+        d_targ = tf.concat([raw_d, d_mask], axis=2)
+        outputs['d'] = d_targ
     loss = rnn.train_on_batch(x=inputs, y=outputs, return_dict=True)
     [tf.summary.scalar(loss_key, loss_val, step=step) for loss_key, loss_val in loss.items()]
 
@@ -115,4 +119,5 @@ for raw_z, raw_a, raw_r in dataset:
         print(output_log)
     if (step%1000==0 and step > 0):
         tf.keras.models.save_model(rnn, model_save_path, include_optimizer=True, save_format='tf')
+        print("Saved model at step: " , step)
     step += 1
