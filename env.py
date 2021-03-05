@@ -315,19 +315,7 @@ class BoxingWrapper(gym.ObservationWrapper):
         self.observation_space = Box(low=0, high=255, shape=(64, 64, 3))  # , dtype=np.uint8
 
     def step(self, action):
-        if action < -0.667:
-            env_action = 0  # no operation
-        elif action < -0.333:
-            env_action = 1  # fire
-        elif action < 0:
-            env_action = 2  # up
-        elif action < 0.333:
-            env_action = 3  # right
-        elif action < 0.667:
-            env_action = 4  # left
-        else:
-            env_action = 5  # down
-        obs, env_action, done, _ = super(BoxingWrapper, self).step(env_action)
+        obs, reward, done, _ = super(BoxingWrapper, self).step(action)
         if self.full_episode:
             return obs, reward, False, {}
         return obs, reward, done, {}
@@ -461,7 +449,21 @@ class BoxingMDNRNN(BoxingWrapper):
         self.frame_count += 1
         self.rnn_states = rnn_next_state(self.rnn, self.z, action, self.rnn_states)
 
-        self.current_obs, reward, done, _ = super(BoxingMDNRNN, self).step(action)
+        #
+        if action < -0.667:
+            env_action = 0  # no operation
+        elif action < -0.333:
+            env_action = 1  # fire
+        elif action < 0:
+            env_action = 2  # up
+        elif action < 0.333:
+            env_action = 3  # right
+        elif action < 0.667:
+            env_action = 4  # left
+        else:
+            env_action = 5  # down
+
+        self.current_obs, reward, done, _ = super(BoxingMDNRNN, self).step(env_action)
         self.z = self.encode_obs(self.current_obs)
 
         if done:
