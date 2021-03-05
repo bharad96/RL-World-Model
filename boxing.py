@@ -12,6 +12,7 @@ def random_agent():
     # env = gym.make('Boxing-v0').env
     env = BoxingWrapper(gym.make('Boxing-v0').env)
     env.reset()
+    random.seed(100)
 
     count = 0
     episode_reward = 0
@@ -27,8 +28,9 @@ def random_agent():
         # action = random.randint(0, env.action_space)
             # repeat = random.randint(1, 11)
         # env.render()
-        action = env.action_space.sample()
-        time.sleep(0.03)
+        action = random.randint(2, 4)
+        # action = env.action_space.sample()
+        time.sleep(0.01)
         obs, reward, done, info = env.step(action)
 
         env.render_processed_frame(obs)
