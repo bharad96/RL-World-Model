@@ -450,9 +450,9 @@ class BoxingMDNRNN(BoxingWrapper):
         self.rnn_states = rnn_next_state(self.rnn, self.z, action, self.rnn_states)
 
         #
-        if action < -0.667:
-            env_action = 0  # no operation
-        elif action < -0.333:
+        # if action < -0.667:
+        #     env_action = 0  # no operation
+        if action < -0.333:
             env_action = 1  # fire
         elif action < 0:
             env_action = 2  # up
