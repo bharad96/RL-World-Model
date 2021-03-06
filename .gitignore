@@ -135,4 +135,3 @@ record/
 /ref/vizdoom.ini
 *.npz
 tensorboard/
-variables/
