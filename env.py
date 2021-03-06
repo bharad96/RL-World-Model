@@ -449,19 +449,18 @@ class BoxingMDNRNN(BoxingWrapper):
         self.frame_count += 1
         self.rnn_states = rnn_next_state(self.rnn, self.z, action, self.rnn_states)
 
-        #
         # if action < -0.667:
         #     env_action = 0  # no operation
-        if action < -0.333:
-            env_action = 1  # fire
-        elif action < 0:
+        if action < -0.6:
+            env_action = 1  # punch
+        elif action < -0.2:
             env_action = 2  # up
-        elif action < 0.333:
-            env_action = 3  # right
-        elif action < 0.667:
+        elif action < 0.2:
+            env_action = 5  # down
+        elif action < 0.6:
             env_action = 4  # left
         else:
-            env_action = 5  # down
+            env_action = 3  # right
 
         self.current_obs, reward, done, _ = super(BoxingMDNRNN, self).step(env_action)
         self.z = self.encode_obs(self.current_obs)
