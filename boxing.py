@@ -28,8 +28,7 @@ def random_agent():
         # action = random.randint(0, env.action_space)
             # repeat = random.randint(1, 11)
         # env.render()
-        action = random.randint(2, 4)
-        # action = env.action_space.sample()
+        action = env.action_space.sample()
         time.sleep(0.01)
         obs, reward, done, info = env.step(action)
 

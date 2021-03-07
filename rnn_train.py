@@ -38,18 +38,18 @@ data_N = raw_data["N"]
 N_data = len(data_mu) # should be 10k
 
 # save 1000 initial mu and logvars. Used for sampling when training in dreams
-# initial_z_save_path = "results/{}/{}/tf_initial_z".format(args.exp_name, args.env_name)
-# if not os.path.exists(initial_z_save_path):
-#   os.makedirs(initial_z_save_path)
-# initial_mu = []
-# initial_logvar = []
-# for i in range(1000):
-#   mu = np.copy(data_mu[i][0, :]*10000).astype(np.int).tolist()
-#   logvar = np.copy(data_logvar[i][0, :]*10000).astype(np.int).tolist()
-#   initial_mu.append(mu)
-#   initial_logvar.append(logvar)
-# with open(os.path.join(initial_z_save_path, "initial_z.json"), 'wt') as outfile:
-#   json.dump([initial_mu, initial_logvar], outfile, sort_keys=True, indent=0, separators=(',', ': '))
+initial_z_save_path = "results/{}/{}/tf_initial_z".format(args.exp_name, args.env_name)
+if not os.path.exists(initial_z_save_path):
+  os.makedirs(initial_z_save_path)
+initial_mu = []
+initial_logvar = []
+for i in range(1000):
+  mu = np.copy(data_mu[i][0, :]*10000).astype(np.int).tolist()
+  logvar = np.copy(data_logvar[i][0, :]*10000).astype(np.int).tolist()
+  initial_mu.append(mu)
+  initial_logvar.append(logvar)
+with open(os.path.join(initial_z_save_path, "initial_z.json"), 'wt') as outfile:
+  json.dump([initial_mu, initial_logvar], outfile, sort_keys=True, indent=0, separators=(',', ': '))
 
 def ds_gen():
   for _ in range(args.rnn_num_steps):

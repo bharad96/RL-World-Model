@@ -8,7 +8,7 @@ import os
 import gym
 import time
 
-from env import BoxingWrapper
+from env import EnduroWrapper
 # from controller import make_controller
 
 from utils import PARSER
@@ -24,8 +24,8 @@ if not os.path.exists(dir_name):
 total_frames = 0
 
 # env = make_env(args=args, render_mode=args.render_mode, full_episode=args.full_episode, with_obs=True, load_model=False)
-# env = EnduroWrapper(gym.make('Enduro-v0').env)  # Used to extract obs and action for training vae and mdnrnn
-env = BoxingWrapper(gym.make('Boxing-v0').env)  # Used to extract obs and action for training vae and mdnrnn
+env = EnduroWrapper(gym.make('Enduro-v0').env)  # Used to extract obs and action for training vae and mdnrnn
+# env = BoxingWrapper(gym.make('Boxing-v0').env)  # Used to extract obs and action for training vae and mdnrnn
 
 for trial in range(args.max_trials):
     try:
@@ -43,7 +43,7 @@ for trial in range(args.max_trials):
 
         tot_r = 0
         frame = env.reset()  # pixels
-
+        repeat = random.randint(1, 3)
         done = False
         i=0
         while not done:
@@ -53,7 +53,11 @@ for trial in range(args.max_trials):
                 time.sleep(0.02)
 
             recording_frame.append(frame)
-            action = env.action_space.sample()
+            if i % repeat == 0:
+                # action = env.action_space.sample()
+                action = random.randint(1, 3)
+                repeat = random.randint(1, 3)
+
             recording_action.append(action)
 
             frame, reward, done, info = env.step(action)
@@ -77,6 +81,6 @@ for trial in range(args.max_trials):
     except gym.error.Error:
         print("stupid gym error, life goes on")
         env.close()
-        env = BoxingWrapper(gym.make('Boxing-v0').env)  # Used to extract obs and action for training vae and mdnrnn
+        env = EnduroWrapper(gym.make('Enduro-v0').env)  # Used to extract obs and action for training vae and mdnrnn
         continue
 env.close()
