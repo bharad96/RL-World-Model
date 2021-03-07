@@ -74,7 +74,7 @@ dataset = dataset.prefetch(10)
 tensorboard_dir = os.path.join(model_save_path, 'tensorboard')
 summary_writer = tf.summary.create_file_writer(tensorboard_dir)
 summary_writer.set_as_default()
-tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=tensorboard_dir, write_graph=False)
+tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=tensorboard_dir, write_graph=True)
 
 rnn = MDNRNN(args=args)
 rnn.compile(optimizer=rnn.optimizer, loss=rnn.get_loss())
