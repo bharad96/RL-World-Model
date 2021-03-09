@@ -17,20 +17,20 @@ class CVAE(tf.keras.Model):
         super(CVAE, self).__init__()
 
         self.inference_net_base = tf.keras.Sequential(
-            [tf.keras.layers.InputLayer(input_shape=(64, 64, 3)),
-            tf.keras.layers.Conv2D(
-              filters=32, kernel_size=4, strides=(2, 2), activation='relu',
-              name="enc_conv1"),
-            tf.keras.layers.Conv2D(
-              filters=64, kernel_size=4, strides=(2, 2), activation='relu',
-              name="enc_conv2"),
-            tf.keras.layers.Conv2D(
-              filters=128, kernel_size=4, strides=(2, 2), activation='relu',
-              name="enc_conv3"),
-            tf.keras.layers.Conv2D(
-              filters=256, kernel_size=4, strides=(2, 2), activation='relu',
-              name="enc_conv4"),
-            tf.keras.layers.Flatten()])
+            [tf.keras.layers.InputLayer(input_shape=(100, 100, 3)),
+             tf.keras.layers.Conv2D(
+                 filters=32, kernel_size=4, strides=(3, 3), activation='relu',
+                 name="enc_conv1"),
+             tf.keras.layers.Conv2D(
+                 filters=64, kernel_size=4, strides=(2, 2), activation='relu',
+                 name="enc_conv2"),
+             tf.keras.layers.Conv2D(
+                 filters=128, kernel_size=4, strides=(2, 2), activation='relu',
+                 name="enc_conv3"),
+             tf.keras.layers.Conv2D(
+                 filters=256, kernel_size=4, strides=(2, 2), activation='relu',
+                 name="enc_conv4"),
+             tf.keras.layers.Flatten()])
         
         self.mu_net = tf.keras.Sequential([
             tf.keras.layers.InputLayer(input_shape=(1024)),
@@ -59,15 +59,15 @@ class CVAE(tf.keras.Model):
               name="dec_deconv2"),
             tf.keras.layers.Conv2DTranspose(
               filters=32,
-              kernel_size=6,
+              kernel_size=7,
               strides=(2, 2),
               padding="valid",
               activation='relu',
               name="dec_deconv3"),
             tf.keras.layers.Conv2DTranspose(
               filters=3,
-              kernel_size=6,
-              strides=(2, 2),
+              kernel_size=10,
+              strides=(3, 3),
               padding="valid",
               activation="sigmoid",
               name="dec_deconv4")])

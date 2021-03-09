@@ -125,15 +125,15 @@ from gym.utils import seeding
 
 class EnduroWrapper(gym.ObservationWrapper):
     def observation(self, observation):
-        obs = observation[51:155, 8:, :]  # this corresponds to the car racing area
-        obs = Image.fromarray(obs, mode='RGB').resize((64, 64))
+        obs = observation[51:151, 30:130, :]  # this corresponds to the car racing area
+        # obs = Image.fromarray(obs, mode='RGB').resize((64, 64))
         obs = np.array(obs)
         return obs
 
     def __init__(self, env, full_episode=False):
         super(EnduroWrapper, self).__init__(env)
         self.full_episode = full_episode
-        self.observation_space = Box(low=0, high=255, shape=(64, 64, 3))  # , dtype=np.uint8
+        self.observation_space = Box(low=0, high=255, shape=(100, 100, 3))  # , dtype=np.uint8
 
     def step(self, action):
         obs, reward, done, _ = super(EnduroWrapper, self).step(action)
