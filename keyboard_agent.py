@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 import sys, gym, time
-from env import EnduroWrapper
+from env import EnduroWrapperBW
 #
 # Test yourself as a learning agent! Pass environment name as a command-line argument, for example:
 #
 # python keyboard_agent.py SpaceInvadersNoFrameskip-v4
 #
 
-env = EnduroWrapper(gym.make('Enduro-v0').env)
+env = EnduroWrapperBW(gym.make('Enduro-v0').env)
 
 if not hasattr(env.action_space, 'n'):
     raise Exception('Keyboard agent only supports discrete action spaces')

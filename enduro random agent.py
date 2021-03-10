@@ -1,14 +1,14 @@
 import gym
 import random
 import time
-from env import EnduroWrapper
+from env import EnduroWrapperBW
 from PIL import Image
 import numpy as np
 import os
 
 
 def random_agent():
-    env = EnduroWrapper(gym.make('Enduro-v0').env)
+    env = EnduroWrapperBW(gym.make('Enduro-v0').env)
     obs = env.reset()
     print(env.get_action_meanings())
     print(env.action_space)

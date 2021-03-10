@@ -8,7 +8,7 @@ import os
 import gym
 import time
 
-from env import EnduroWrapper
+from env import EnduroWrapperBW
 # from controller import make_controller
 
 from utils import PARSER
@@ -24,7 +24,7 @@ if not os.path.exists(dir_name):
 total_frames = 0
 
 # env = make_env(args=args, render_mode=args.render_mode, full_episode=args.full_episode, with_obs=True, load_model=False)
-env = EnduroWrapper(gym.make('Enduro-v0').env)  # Used to extract obs and action for training vae and mdnrnn
+env = EnduroWrapperBW(gym.make('Enduro-v0').env)  # Used to extract obs and action for training vae and mdnrnn
 # env = BoxingWrapper(gym.make('Boxing-v0').env)  # Used to extract obs and action for training vae and mdnrnn
 
 for trial in range(args.max_trials):
@@ -81,6 +81,6 @@ for trial in range(args.max_trials):
     except gym.error.Error:
         print("stupid gym error, life goes on")
         env.close()
-        env = EnduroWrapper(gym.make('Enduro-v0').env)  # Used to extract obs and action for training vae and mdnrnn
+        env = EnduroWrapperBW(gym.make('Enduro-v0').env)  # Used to extract obs and action for training vae and mdnrnn
         continue
 env.close()

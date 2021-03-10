@@ -4,7 +4,8 @@ import json
 import os
 import tensorflow as tf
 import gc
-
+import cv2
+cv2.ocl.setUseOpenCL(False)
 from PIL import Image
 from gym.spaces.box import Box
 
@@ -122,8 +123,33 @@ from gym.utils import seeding
 #         self.np_random, seed = seeding.np_random(seed)
 #         return [seed]
 
+class EnduroWrapperBW(gym.ObservationWrapper):
+    def observation(self, observation):
+        obs = observation[51:151, 30:130, :]  # this corresponds to the car racing area
+        obs = cv2.cvtColor(obs, cv2.COLOR_RGB2GRAY)
+        obs = cv2.resize(obs,  (64, 64), interpolation=cv2.INTER_AREA)
+        obs = np.array(obs)
+        return obs
 
-class EnduroWrapper(gym.ObservationWrapper):
+    def __init__(self, env, full_episode=False):
+        super(EnduroWrapperBW, self).__init__(env)
+        self.full_episode = full_episode
+        self.observation_space = Box(low=0, high=255, shape=(64, 64, 1))  # , dtype=np.uint8
+
+    def step(self, action):
+        obs, reward, done, _ = super(EnduroWrapperBW, self).step(action)
+        if self.full_episode:
+            return obs, reward, False, {}
+        return obs, reward, done, {}
+
+    def render_processed_frame(self, img):
+        from gym.envs.classic_control import rendering
+        if self.viewer is None:
+            self.viewer = rendering.SimpleImageViewer()
+        self.viewer.imshow(img)
+        return self.viewer.isopen
+
+class EnduroWrapperColor(gym.ObservationWrapper):
     def observation(self, observation):
         obs = observation[51:151, 30:130, :]  # this corresponds to the car racing area
         # obs = Image.fromarray(obs, mode='RGB').resize((64, 64))
@@ -131,12 +157,12 @@ class EnduroWrapper(gym.ObservationWrapper):
         return obs
 
     def __init__(self, env, full_episode=False):
-        super(EnduroWrapper, self).__init__(env)
+        super(EnduroWrapperColor, self).__init__(env)
         self.full_episode = full_episode
-        self.observation_space = Box(low=0, high=255, shape=(100, 100, 3))  # , dtype=np.uint8
+        self.observation_space = Box(low=0, high=255, shape=(100, 100, 1))  # , dtype=np.uint8
 
     def step(self, action):
-        obs, reward, done, _ = super(EnduroWrapper, self).step(action)
+        obs, reward, done, _ = super(EnduroWrapperColor, self).step(action)
         if self.full_episode:
             return obs, reward, False, {}
         return obs, reward, done, {}
