@@ -19,17 +19,20 @@ class CVAE(tf.keras.Model):
         self.inference_net_base = tf.keras.Sequential(
             [tf.keras.layers.InputLayer(input_shape=(100, 100, 3)),
              tf.keras.layers.Conv2D(
-                 filters=32, kernel_size=4, strides=(3, 3), activation='relu',
+                 filters=32, kernel_size=4, strides=(2, 2), activation='relu',
                  name="enc_conv1"),
              tf.keras.layers.Conv2D(
-                 filters=64, kernel_size=4, strides=(2, 2), activation='relu',
+                 filters=32, kernel_size=4, strides=(2, 2), activation='relu',
                  name="enc_conv2"),
              tf.keras.layers.Conv2D(
-                 filters=128, kernel_size=4, strides=(2, 2), activation='relu',
+                 filters=64, kernel_size=4, strides=(2, 2), activation='relu',
                  name="enc_conv3"),
              tf.keras.layers.Conv2D(
-                 filters=256, kernel_size=4, strides=(2, 2), activation='relu',
+                 filters=128, kernel_size=3, strides=(2, 2), activation='relu',
                  name="enc_conv4"),
+             tf.keras.layers.Conv2D(
+                 filters=256, kernel_size=3, strides=(1, 1), activation='relu',
+                 name="enc_conv5"),
              tf.keras.layers.Flatten()])
         
         self.mu_net = tf.keras.Sequential([
@@ -45,32 +48,40 @@ class CVAE(tf.keras.Model):
             tf.keras.layers.Reshape(target_shape=(1, 1, 4*256)),
             tf.keras.layers.Conv2DTranspose(
               filters=128,
-              kernel_size=5,
+              kernel_size=4,
               strides=(2, 2),
               padding="valid",
               activation='relu',
               name="dec_deconv1"),
             tf.keras.layers.Conv2DTranspose(
               filters=64,
-              kernel_size=5,
+              kernel_size=4,
               strides=(2, 2),
               padding="valid",
               activation='relu',
               name="dec_deconv2"),
             tf.keras.layers.Conv2DTranspose(
               filters=32,
-              kernel_size=7,
+              kernel_size=5,
               strides=(2, 2),
               padding="valid",
               activation='relu',
               name="dec_deconv3"),
             tf.keras.layers.Conv2DTranspose(
-              filters=3,
-              kernel_size=10,
-              strides=(3, 3),
+              filters=32,
+              kernel_size=5,
+              strides=(2, 2),
               padding="valid",
               activation="sigmoid",
-              name="dec_deconv4")])
+              name="dec_deconv4"),
+             tf.keras.layers.Conv2DTranspose(
+                 filters=3,
+                 kernel_size=4,
+                 strides=(2, 2),
+                 padding="valid",
+                 activation="sigmoid",
+                 name="dec_deconv5")
+             ])
 
     def sample(self, eps=None):
         if eps is None:
