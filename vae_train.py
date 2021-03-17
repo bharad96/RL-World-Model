@@ -26,7 +26,7 @@ def ds_gen():
             N = data['obs'].shape[0]
             for i, img in enumerate(data['obs']):
                 img_i = img / 255.0
-                yield img_i
+                yield img_i.reshape(64, 64, 1)
 
 
 if __name__ == "__main__":
@@ -38,7 +38,7 @@ if __name__ == "__main__":
     summary_writer.set_as_default()
     tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=tensorboard_dir, write_graph=True)
     shuffle_size = 5 * 2000  # only loads ~5 episodes for shuffle windows b/c im poor and don't have much RAM
-    ds = tf.data.Dataset.from_generator(ds_gen, output_types=tf.float32, output_shapes=(100, 100, 3))
+    ds = tf.data.Dataset.from_generator(ds_gen, output_types=tf.float32, output_shapes=(64, 64, 1))
     ds = ds.shuffle(shuffle_size, reshuffle_each_iteration=True).batch(args.vae_batch_size)
     ds = ds.prefetch(100)  # prefetch 100 batches in the buffer #tf.data.experimental.AUTOTUNE)
     vae = CVAE(args=args)
