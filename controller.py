@@ -35,7 +35,7 @@ class Controller:
         self.exp_mode = args.exp_mode
         self.input_size = args.z_size + args.state_space * args.rnn_size
         self.z_size = args.z_size
-        self.a_width = args.a_width
+        self.a_width = 5
         self.args = args
 
         # if self.exp_mode == MODE_Z_HIDDEN: # one hidden layer
@@ -61,8 +61,8 @@ class Controller:
         '''
         # print("h: ", np.shape(h))
         # print("weight: ", np.shape(self.weight))
-        action = np.tanh(np.dot(h, self.weight) + self.bias)
-        # print("Controller action: ", action)
+        action_vector = np.tanh(np.dot(h, self.weight) + self.bias)
+        action = np.argmax(action_vector) + 1
         return action
 
     def set_model_params(self, model_params):

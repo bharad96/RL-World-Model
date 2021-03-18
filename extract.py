@@ -53,7 +53,7 @@ for trial in range(args.max_trials):
                 time.sleep(0.02)
 
             recording_frame.append(frame)
-            action = env.action_space.sample()
+            action = random.randint(1, 5) # possible actions are fire, left right up down
             recording_action.append(action)
 
             frame, reward, done, info = env.step(action)
