@@ -36,7 +36,7 @@ if __name__ == "__main__":
     tensorboard_dir = os.path.join(model_save_path, 'tensorboard')
     summary_writer = tf.summary.create_file_writer(tensorboard_dir)
     summary_writer.set_as_default()
-    tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=tensorboard_dir, write_graph=False)
+    tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=tensorboard_dir, write_graph=True)
     shuffle_size = 5 * 2000  # only loads ~5 episodes for shuffle windows b/c im poor and don't have much RAM
     ds = tf.data.Dataset.from_generator(ds_gen, output_types=tf.float32, output_shapes=(64, 64, 3))
     ds = ds.shuffle(shuffle_size, reshuffle_each_iteration=True).batch(args.vae_batch_size)
