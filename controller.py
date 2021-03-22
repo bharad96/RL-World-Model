@@ -62,8 +62,7 @@ class Controller:
         # print("h: ", np.shape(h))
         # print("weight: ", np.shape(self.weight))
         action_vector = np.tanh(np.dot(h, self.weight) + self.bias)
-        action = np.argmax(action_vector) + 1
-        return action
+        return action_vector
 
     def set_model_params(self, model_params):
         # if self.exp_mode == MODE_Z_HIDDEN: # one hidden layer

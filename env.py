@@ -90,24 +90,26 @@ class BoxingMDNRNN(BoxingWrapper):
         return np.concatenate([self.z, tf.keras.backend.flatten(self.rnn_states[0])], axis=0)  # only the hidden state
 
 
-    def step(self, action):
+    def step(self, action_vector):
         # update states of rnn
         self.frame_count += 1
-        self.rnn_states = rnn_next_state(self.rnn, self.z, action, self.rnn_states)
+        # self.rnn_states = rnn_next_state(self.rnn, self.z, action, self.rnn_states)
 
         # if action < -0.667:
         #     env_action = 0  # no operation
-        if action < -0.6:
-            env_action = 1  # punch
-        elif action < -0.2:
-            env_action = 2  # up
-        elif action < 0.2:
-            env_action = 5  # down
-        elif action < 0.6:
-            env_action = 4  # left
-        else:
-            env_action = 3  # right
+        # if action < -0.6:
+        #     env_action = 1  # punch
+        # elif action < -0.2:
+        #     env_action = 2  # up
+        # elif action < 0.2:
+        #     env_action = 5  # down
+        # elif action < 0.6:
+        #     env_action = 4  # left
+        # else:
+        #     env_action = 3  # right
 
+        env_action = np.argmax(action_vector) + 1
+        self.rnn_states = rnn_next_state(self.rnn, self.z, env_action, self.rnn_states)
         self.current_obs, reward, done, _ = super(BoxingMDNRNN, self).step(env_action)
         self.z = self.encode_obs(self.current_obs)
 
